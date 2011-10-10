@@ -1,0 +1,10 @@
+{
+ "name":"querify",
+ "version":"0.2.0",
+ "description":"a query interpreter for javascript and node.js",
+ "author":"pubsub.io",
+ "contributors": [
+  "Mathias Buus Madsen <m@pubsub.io>",
+  "Ian Jorgensen <i@pubsub.io>"
+ ]
+}
