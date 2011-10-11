@@ -4,7 +4,11 @@ var OR  = 2;
 var isRegex = function(regex) {
 	return Object.prototype.toString.call(regex) === '[object RegExp]';
 };
-var reduce = function(op, list) { // this method is verbose and built for speed
+var isArray = function(list) { // TODO: add a polyfill for the browser
+	return Array.isArray(list);
+};
+// convert a list of validator functions into a single one using a bool relation
+var reduce = function(op, list) {
 	if (list.length === 1) { // single item track
 		return list[0];
 	}
@@ -38,8 +42,9 @@ var reduce = function(op, list) { // this method is verbose and built for speed
 			return false;			
 		};
 };
+// given some input and a constructor function, map this to the input and reduce
 var mapReduce = function(op, list, fn) {
-	if (!Array.isArray(list)) {
+	if (!isArray(list)) {
 		return fn(list);
 	}
 	for (var i = 0; i < list.length; i++) {
@@ -158,6 +163,7 @@ var not = function(definition) {
 	}	
 });
 
+// we allow you extend the inner language by adding a keyword and a constructor function. 
 exports.define = function(name, definition) {
 	if (typeof name === 'object') {
 		for (var i in name) {
@@ -212,6 +218,7 @@ var compile = function(query) {
 };
 
 exports.compile = compile;
+// a useful utility for sending queries as json (regex is NOT json)
 exports.normalize = function(query) {
 	for (var i in query) {
 		if (isRegex(query[i])) {
@@ -220,6 +227,7 @@ exports.normalize = function(query) {
 	}
 	return query;
 };
+// a linq like filter method for filtering an array
 exports.filter = function() {
 	var select = function(obj, sel) {
 		if (!sel) {
