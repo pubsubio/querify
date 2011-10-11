@@ -1,6 +1,6 @@
 {
  "name":"querify",
- "version":"0.2.0",
+ "version":"0.2.1",
  "description":"a query interpreter for javascript and node.js",
  "author":"pubsub.io",
  "contributors": [

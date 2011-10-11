@@ -39,6 +39,9 @@ var reduce = function(op, list) { // this method is verbose and built for speed
 		};
 };
 var mapReduce = function(op, list, fn) {
+	if (!Array.isArray(list)) {
+		return fn(list);
+	}
 	for (var i = 0; i < list.length; i++) {
 		list[i] = fn(list[i]);
 	}	
@@ -92,6 +95,8 @@ var inner = {
 	},
 	$like: function(key, vals) {
 		return mapReduce(AND, vals, function(val) {
+			val = val.toLowerCase();
+
 			return function(doc) {
 				return typeof doc[key] === 'string' && doc[key].toLowerCase().indexOf(val) > -1;				
 			};
@@ -168,6 +173,8 @@ var compile = function(query) {
 	var subset = {};
 	var list = [];
 	
+	query = query || {};
+
 	list.push(function(doc) {
 		for (var i in subset) {
 			if (subset[i] !== doc[i]) {
@@ -230,7 +237,7 @@ exports.filter = function() {
 
 	return function(array, options) {
 		var result = [];
-		var query = compile(options.query || {});
+		var query = compile(options.query);
 		
 		if (typeof options.sortBy === 'string') {
 			var sort = {};
@@ -241,7 +248,7 @@ exports.filter = function() {
 		if (options.sortBy) {
 			array = array.sort(function(a,b) {
 				for (var i in options.sortBy) {
-					if (a[i] == b[i]) {
+					if (a[i] === b[i]) {
 						return 0;
 					}
 					return options.sortBy[i] * (a[i] > b[i] ? 1 : -1);

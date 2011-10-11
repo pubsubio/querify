@@ -25,6 +25,16 @@ exports.empty = function(test) {
 	test.done();
 };
 
+exports.undef = function(test) {
+	var all = querify.compile();
+
+	test.ok(all({}));
+	test.ok(all({a:1}));
+	test.ok(all({b:'a'}));
+	test.done();
+};
+
+
 exports.subset = function(test) {
 	var query = querify.compile({a:1});
 
@@ -140,5 +150,49 @@ exports.not2 = function(test) {
 	test.ok(query({a:1}));
 	test.ok(query({}));
 	test.done();
+};
 
+exports.exists = function(test) {
+	var query = querify.compile({a:{$exists:true}});
+
+	test.ok(query({a:1}));
+	test.ok(query({a:'yay'}));
+	test.ok(!query({}));
+	test.ok(!query({b:1}));
+	test.done();
+};
+
+exports.nil = function(test) {
+	var query = querify.compile({a:{$nil:true}});
+
+	test.ok(query({}));
+	test.ok(query({a:undefined}));
+	test.ok(query({a:null}));
+	test.ok(!query({a:false}));
+	test.ok(!query({a:0}));
+	test.ok(!query({a:'yay'}));
+	test.done();
+};
+
+exports.like = function(test) {
+	var query = querify.compile({a:{$like:'meh'}});
+
+	test.ok(query({a:'meh'}));
+	test.ok(query({a:'jameh'}));
+	test.ok(query({a:'meheh'}));
+	test.ok(query({a:'MEH'}));
+	test.ok(query({a:'JAMEH'}));
+	test.ok(query({a:'MEHEH'}));
+	test.ok(!query({a:1}));
+	test.ok(!query({a:'lol'}));
+	test.ok(!query({}));
+	test.done();
+};
+
+exports.normalize = function(test) {
+	var query = {a:/a/};
+	var normalized = querify.normalize(query);
+
+	test.ok(/a/.toString() === normalized.a.$regex);
+	test.done();
 };
