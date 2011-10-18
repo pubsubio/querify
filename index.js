@@ -175,11 +175,16 @@ exports.define = function(name, definition) {
 	inner['$not'+name.substring(1)] = not(definition);
 };
 
+var thruthy = function() {
+	return true;	
+};
 var compile = function(query) {
 	var subset = {};
 	var list = [];
 	
-	query = query || {};
+	if (!query) {
+		return thruthy;
+	}
 
 	list.push(function(doc) {
 		for (var i in subset) {
