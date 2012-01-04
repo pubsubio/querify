@@ -47,10 +47,8 @@ var mapReduce = function(op, list, fn) {
 	if (!isArray(list)) {
 		return fn(list);
 	}
-	for (var i = 0; i < list.length; i++) {
-		list[i] = fn(list[i]);
-	}	
-	return reduce(op, list);
+
+	return reduce(op, list.map(fn));
 };
 
 // the outer language: doc:{$op:value}
