@@ -17,29 +17,31 @@ var reduce = function(op, list) {
 		var b = list[1];
 
 		return op === AND ?
-			function(doc) {
-				return a(doc) && b(doc);
+			function(doc,prev) {
+				return a(doc,prev) && b(doc,prev);
 			} :
-			function(doc) {
-				return a(doc) || b(doc);
+			function(doc,prev) {
+				return a(doc,prev) || b(doc,prev);
 			};
 	}
 	return op === AND ?  // list iteration track
-		function(doc) {
+		function(doc,prev) {
 			for (var i = 0; i < list.length; i++) {
-				if (!list[i](doc)) {
+				if (!list[i](doc,prev)) {
 					return false;
 				}
 			}
+
 			return true;
 		} :
-		function(doc) {
+		function(doc,prev) {
 			for (var i = 0; i < list.length; i++) {
-				if (list[i](doc)) {
+				if (list[i](doc,prev)) {
 					return true;
 				}
 			}
-			return false;			
+
+			return false;
 		};
 };
 // given some input and a constructor function, map this to the input and reduce
@@ -101,7 +103,7 @@ var inner = {
 			val = val.toLowerCase();
 
 			return function(doc) {
-				return typeof doc[key] === 'string' && doc[key].toLowerCase().indexOf(val) > -1;				
+				return typeof doc[key] === 'string' && doc[key].toLowerCase().indexOf(val) > -1;
 			};
 		});
 	},
@@ -115,6 +117,26 @@ var inner = {
 		return function(doc) {
 			return doc[key] !== undefined && doc[key] !== null && regex.test(doc[key]);
 		};
+	},
+	// transitional queries
+	$changed: function(key) {
+		return function(doc, prev) {
+			return !prev || (doc[key] !== prev[key]);
+		};
+	},
+	$from: function(key, vals) {
+		return mapReduce(OR, vals, function(val) {
+			return function(doc, prev) {
+				return !!prev && prev[key] === val && doc[key] !== val;
+			};
+		});
+	},
+	$to: function(key, vals) {
+		return mapReduce(OR, vals, function(val) {
+			return function(doc, prev) {
+				return (!prev || prev[key] !== val) && doc[key] === val;
+			};
+		});
 	},
 	// classic number operators
 	$gt: function(key, val) {
@@ -161,20 +183,8 @@ var not = function(definition) {
 	}	
 });
 
-// we allow you extend the inner language by adding a keyword and a constructor function. 
-exports.define = function(name, definition) {
-	if (typeof name === 'object') {
-		for (var i in name) {
-			exports.define(i, name[i]);
-		}
-		return;
-	}
-	inner[name] = definition;
-	inner['$not'+name.substring(1)] = not(definition);
-};
-
 var thruthy = function() {
-	return true;	
+	return true;
 };
 var compile = function(query) {
 	var subset = {};
@@ -190,6 +200,7 @@ var compile = function(query) {
 				return false;
 			}
 		}
+
 		return true;
 	});
 	
@@ -213,14 +224,15 @@ var compile = function(query) {
 			continue;
 		}
 		if (i.charAt(0) !== '$') {
-			subset[i] = val;			
+			subset[i] = val;
 		}
 	}
 
 	return reduce(AND, list);
 };
 
-exports.compile = compile;
+module.exports = exports = compile;
+
 // a useful utility for sending queries as json (regex is NOT json)
 exports.normalize = function(query) {
 	for (var i in query) {
@@ -228,51 +240,10 @@ exports.normalize = function(query) {
 			query[i] = {$regex:query[i].toString()};
 		}
 	}
+
 	return query;
 };
-// a linq like filter method for filtering an array
-exports.filter = function() {
-	var select = function(obj, sel) {
-		if (!sel) {
-			return obj;
-		}
-		var res = {};
-		
-		for (var i in sel) {
-			if (sel[i]) {
-				res[i] = obj[i];
-			}
-		}
-		return res;
-	};
-
-	return function(array, options) {
-		var result = [];
-		var query = compile(options.query);
-		
-		if (typeof options.sortBy === 'string') {
-			var sort = {};
-			
-			sort[options.sortBy] = 1;
-			options.sortBy = sort;		
-		}
-		if (options.sortBy) {
-			array = array.sort(function(a,b) {
-				for (var i in options.sortBy) {
-					if (a[i] === b[i]) {
-						return 0;
-					}
-					return options.sortBy[i] * (a[i] > b[i] ? 1 : -1);
-				}
-			});
-		}
-		
-		for (var i = 0; i < array.length; i++) {
-			if (query(array[i])) {
-				result.push(select(array[i], options.select));			
-			}
-		}
-	
-		return result;
-	}
-}();
+// shortcut to JSON.stringify(normalize(query))
+exports.stringify = function(query) {
+	return JSON.stringify(exports.normalize(query));
+};
