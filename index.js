@@ -234,7 +234,7 @@ var compile = function(query) {
 module.exports = exports = compile;
 
 // a useful utility for sending queries as json (regex is NOT json)
-exports.normalize = function(query) {
+exports.toJSON = function(query) {
 	for (var i in query) {
 		if (isRegex(query[i])) {
 			query[i] = {$regex:query[i].toString()};
