@@ -1,23 +1,7 @@
 var querify = require('./index');
 
-exports.define = function(test) {
-	querify.define({$meh: function(key, val) {
-		return function(doc) {
-			return doc[key] === 'meh';
-		};
-	}});
-
-	var query = querify.compile({a:{$meh:1}});
-
-	test.ok(query({a:'meh'}));
-	test.ok(query({a:'meh', b:1}));
-	test.ok(!query({a:1}));
-	test.ok(!query({}));
-	test.done();
-};
-
 exports.empty = function(test) {
-	var all = querify.compile({});
+	var all = querify({});
 
 	test.ok(all({}));
 	test.ok(all({a:1}));
@@ -26,7 +10,7 @@ exports.empty = function(test) {
 };
 
 exports.undef = function(test) {
-	var all = querify.compile();
+	var all = querify();
 
 	test.ok(all({}));
 	test.ok(all({a:1}));
@@ -36,7 +20,7 @@ exports.undef = function(test) {
 
 
 exports.subset = function(test) {
-	var query = querify.compile({a:1});
+	var query = querify({a:1});
 
 	test.ok(query({a:1}));
 	test.ok(query({a:1, b:1}));
@@ -46,7 +30,7 @@ exports.subset = function(test) {
 };
 
 exports.subset2 = function(test) {
-	var query = querify.compile({a:1, b:1});
+	var query = querify({a:1, b:1});
 
 	test.ok(query({a:1, b:1}));
 	test.ok(query({a:1, b:1, c:1}));
@@ -56,7 +40,7 @@ exports.subset2 = function(test) {
 };
 
 exports.regex = function(test) {
-	var query = querify.compile({a:/ok/i});
+	var query = querify({a:/ok/i});
 
 	test.ok(query({a:'ok'}));
 	test.ok(query({a:'ja ok'}));
@@ -67,7 +51,7 @@ exports.regex = function(test) {
 };
 
 exports.any = function(test) {
-	var query = querify.compile({a:{$any:['a','b']}});
+	var query = querify({a:{$any:['a','b']}});
 
 	test.ok(query({a:'a'}));
 	test.ok(query({a:'b'}));
@@ -78,7 +62,7 @@ exports.any = function(test) {
 };
 
 exports.or = function(test) {
-	var query = querify.compile({$or:[{a:1}, {b:1}]});
+	var query = querify({$or:[{a:1}, {b:1}]});
 
 	test.ok(query({a:1}));
 	test.ok(query({b:1}));
@@ -89,7 +73,7 @@ exports.or = function(test) {
 };
 
 exports.gt = function(test) {
-	var query = querify.compile({a:{$gt:1}, b:{$gte:1}});
+	var query = querify({a:{$gt:1}, b:{$gte:1}});
 
 	test.ok(query({a:2, b:1}));
 	test.ok(query({a:3, b:3}));
@@ -102,7 +86,7 @@ exports.gt = function(test) {
 };
 
 exports.lt = function(test) {
-	var query = querify.compile({a:{$lt:4}, b:{$lte:4}});
+	var query = querify({a:{$lt:4}, b:{$lte:4}});
 
 	test.ok(query({a:2, b:1}));
 	test.ok(query({a:3, b:3}));
@@ -115,7 +99,7 @@ exports.lt = function(test) {
 };
 
 exports.mod = function(test) {
-	var query = querify.compile({a:{$mod:[2,0]}});
+	var query = querify({a:{$mod:[2,0]}});
 
 	test.ok(query({a:2}));
 	test.ok(query({a:0}));
@@ -126,7 +110,7 @@ exports.mod = function(test) {
 };
 
 exports.not = function(test) {
-	var query = querify.compile({a:{$notmod:[2,0]}});
+	var query = querify({a:{$notmod:[2,0]}});
 
 	test.ok(!query({a:2}));
 	test.ok(!query({a:0}));
@@ -136,24 +120,8 @@ exports.not = function(test) {
 	test.done();	
 };
 
-exports.not2 = function(test) {
-	querify.define({$meh: function(key, val) {
-		return function(doc) {
-			return doc[key] === 'meh';
-		};
-	}});
-
-	var query = querify.compile({a:{$notmeh:1}});
-
-	test.ok(!query({a:'meh'}));
-	test.ok(!query({a:'meh', b:1}));
-	test.ok(query({a:1}));
-	test.ok(query({}));
-	test.done();
-};
-
 exports.exists = function(test) {
-	var query = querify.compile({a:{$exists:true}});
+	var query = querify({a:{$exists:true}});
 
 	test.ok(query({a:1}));
 	test.ok(query({a:'yay'}));
@@ -163,7 +131,7 @@ exports.exists = function(test) {
 };
 
 exports.nil = function(test) {
-	var query = querify.compile({a:{$nil:true}});
+	var query = querify({a:{$nil:true}});
 
 	test.ok(query({}));
 	test.ok(query({a:undefined}));
@@ -175,7 +143,7 @@ exports.nil = function(test) {
 };
 
 exports.like = function(test) {
-	var query = querify.compile({a:{$like:'meh'}});
+	var query = querify({a:{$like:'meh'}});
 
 	test.ok(query({a:'meh'}));
 	test.ok(query({a:'jameh'}));
@@ -189,9 +157,9 @@ exports.like = function(test) {
 	test.done();
 };
 
-exports.normalize = function(test) {
+exports.toJSON = function(test) {
 	var query = {a:/a/};
-	var normalized = querify.normalize(query);
+	var normalized = querify.toJSON(query);
 
 	test.ok(/a/.toString() === normalized.a.$regex);
 	test.done();
